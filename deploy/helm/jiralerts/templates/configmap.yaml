@@ -1,0 +1,14 @@
+---
+apiVersion: "v1"
+kind: "ConfigMap"
+metadata:
+  labels:
+    app: {{ template "jiralerts.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "jiralerts.fullname" . }}
+data:
+  jiralerts.ini: |
+    [jira]
+    issue_type = {{ .Values.jiralerts.issue_type | default "Task" }}

@@ -1,0 +1,68 @@
+---
+apiVersion: "extensions/v1beta1"
+kind: "Deployment"
+metadata:
+  labels:
+    app: {{ template "jiralerts.fullname" . }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    heritage: "{{ .Release.Service }}"
+    release: "{{ .Release.Name }}"
+  name: {{ template "jiralerts.fullname" . }}
+spec:
+  replicas: {{ default 2 .Values.replicas }}
+  selector:
+    matchLabels:
+      app: {{ template "jiralerts.fullname" . }}
+      release: "{{ .Release.Name }}"
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: "RollingUpdate"
+  template:
+    metadata:
+      labels:
+        app: {{ template "jiralerts.fullname" . }}
+        release: "{{ .Release.Name }}"
+    spec:
+      volumes:
+        - name: "jiralerts"
+          configMap:
+            name: {{ template "jiralerts.fullname" . }}
+      containers:
+        - name: {{ template "jiralerts.name" }}
+          env:
+          - name: "JIRA_SERVER"
+            value: {{ .Values.jira.server | quote }}
+          - name: "JIRA_USERNAME"
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "jiralerts.fullname" . }}
+                key: "jira-username"
+          - name: "JIRA_PASSWORD"
+            valueFrom:
+              secretKeyRef:
+                name: {{ template "jiralerts.fullname" . }}
+                key: "jira-password" 
+          image: {{ .Values.image | quote }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+          ports:
+            - containerPort: 9050
+              protocol: "TCP"
+              name: "http"
+          volumeMounts:
+            - name: "jiralerts"
+              mountPath: "/etc/jiralerts"
+          livenessProbe:
+            tcpSocket:
+              port: "http"
+            timeoutSeconds: 1
+            failureThreshold: 3
+          readinessProbe:
+            tcpSocket:
+              port: "http"
+            timeoutSeconds: 1
+            failureThreshold: 3
+      restartPolicy: "Always"
+
