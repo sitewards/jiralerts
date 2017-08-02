@@ -1,5 +1,12 @@
 # jiralerts
 
+## WARNING
+
+This is the "canonical" branch for this repositroy. However, it is not well supported nor stable. The goal is to get
+all changes on this branch into upstream, or fork it "officially". However, this serves a suitabe base in the mean time
+
+## README
+
 This is a basic JIRA integration for Alertmanager. It receives Alertmanager webhook messages
 and files labeled issues for it. If an alert stops firing or starts firing again, tickets
 are closed or reopened.
