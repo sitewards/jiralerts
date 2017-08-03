@@ -1,10 +1,5 @@
 # jiralerts
 
-## WARNING
-
-This is the "canonical" branch for this repositroy. However, it is not well supported nor stable. The goal is to get
-all changes on this branch into upstream, or fork it "officially". However, this serves a suitabe base in the mean time
-
 ## README
 
 This is a basic JIRA integration for Alertmanager. It receives Alertmanager webhook messages
@@ -33,3 +28,7 @@ receivers:
 
 A typical usage could be a single 'ALERTS' projects where the label in the URL
 refers to the affected system or the team that should handle the issue.
+
+## Thanks
+
+- fabxc is the primary author of all of this work. It has been forked for Sitewards use.
