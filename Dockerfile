@@ -11,7 +11,7 @@ ENV "JIRA_PASSWORD" ""
 # The full address to the jira server (including the https:// bit)
 ENV "JIRA_SERVER" ""
 
-ADD requirements.txt /opt/jiralerts/
+ADD requirements.txt jiralerts.ini /opt/jiralerts/
 
 RUN export BUILD_PKGS="build-base musl-dev linux-headers" && \ 
     export RUN_PKGS="tini" && \

@@ -2,16 +2,23 @@
 
 import os
 import sys
+import configparser
 
 import click
+
 from flask import Flask, request, make_response
 from jira import JIRA
 from jinja2 import Template
 import prometheus_client as prometheus
+import base64
 
 app = Flask(__name__)
 
 jira = None
+
+# Setup the configuration
+config = configparser.ConfigParser()
+config.read('jiralerts.ini')
 
 summary_tmpl = Template(r'{% if commonAnnotations.summary %}{{ commonAnnotations.summary }}{% else %}{% for k, v in groupLabels.items() %}{{ k }}="{{v}}" {% endfor %}{% endif %}')
 
@@ -39,6 +46,7 @@ _Labels_:
 
 
 alert_group_key={{ groupKey }}
+jiraReference={{ jira_reference }}
 ''')
 
 description_boundary = '_-- Alertmanager -- [only edit above]_'
@@ -81,7 +89,7 @@ def create_issue(project, team, summary, description):
         'project': {'key': project},
         'summary': summary,
         'description': "%s\n\n%s" % (description_boundary, description),
-        'issuetype': {'name': 'Task'},
+        'issuetype': {'name': config['jira']['issue_type']},
         'labels': ['alert', team],
     })
 
@@ -93,19 +101,25 @@ def health():
 @app.route('/issues/<project>/<team>', methods=['POST'])
 def file_issue(project, team):
     """
-    This endpoint accepts a JSON encoded notification according to the version 3
+    This endpoint accepts a JSON encoded notification according to the version 3 or 4
     of the generic webhook of the Prometheus Alertmanager.
     """
     data = request.get_json()
-    if data['version'] != "3":
+    if data['version'] not in ["3", "4"]:
         return "unknown message version %s" % data['version'], 400
 
     resolved = data['status'] == "resolved"
+
+    # In python 3, base64 must be passed a byte array. However, the supplied argument is
+    # a string, unencoded. Thus, it must be converted to an encoded string, base64 encoded, and decoded again
+    # for use by jinja
+    data['jiraReference'] = base64.b64encode(data['groupKey'].encode('utf-8')).decode('utf-8')
+
     description = description_tmpl.render(data)
     summary = summary_tmpl.render(data)
 
     # If there's already a ticket for the incident, update it and reopen/close if necessary.
-    result = jira.search_issues(search_query % (project, data['groupKey']))
+    result = jira.search_issues(search_query % (project, data['jiraReference']))
     if result:
         issue = result[0]
 
