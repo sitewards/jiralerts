@@ -16,15 +16,6 @@ app = Flask(__name__)
 
 jira = None
 
-# Setup the configuration
-config = configparser.ConfigParser()
-config.read('jiralerts.ini')
-
-if not config.has_section('jira'):
-    config['jira'] = {}
-
-jira_config = config['jira']
-
 summary_tmpl = Template(r'{% if commonAnnotations.summary %}{{ commonAnnotations.summary }}{% else %}{% for k, v in groupLabels.items() %}{{ k }}="{{v}}" {% endfor %}{% endif %}')
 
 description_tmpl = Template(r'''
@@ -169,9 +160,22 @@ def metrics():
 @click.option('--host', help='Host listen address')
 @click.option('--port', '-p', default=9050, help='Listen port for the webhook')
 @click.option('--debug', '-d', default=False, is_flag=True, help='Enable debug mode')
+@click.option('--config-file', '-c', default='/etc/jiralerts/jiralerts.ini', help='The path to jiralerts.ini')
 @click.argument('server')
-def main(host, port, server, debug):
+
+def main(config_file, host, port, server, debug):
     global jira
+    global config
+    global jiraconfig
+
+    # Setup the configuration
+    config = configparser.ConfigParser()
+    config.read(configfile)
+
+    if not config.has_section('jira'):
+        config['jira'] = {}
+
+    jira_config = config['jira']
 
     username = os.environ.get('JIRA_USERNAME')
     password = os.environ.get('JIRA_PASSWORD')
