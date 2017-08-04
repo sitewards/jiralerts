@@ -1,6 +1,6 @@
 ---
 name: "jiralerts"
-version: "1.0.0"
+version: "1.1.0"
 description: "A helm chart that deploys a functional jiralets container to a cluster"
 keywords:
   - "prometheus"
