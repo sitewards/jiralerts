@@ -5,7 +5,7 @@
 
 ## The image to use with the resource
 ## Ref: https://quay.io/repository/littlemanco/jiralerts
-image: "quay.io/littlemanco/jiralerts:latest"
+image: "quay.io/sitewards/jiralerts:latest"
 
 jiralerts:
   ## The type of issue that will be created when a new alert comes in
