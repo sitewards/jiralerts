@@ -43,7 +43,7 @@ _Labels_:
 
 
 alert_group_key={{ groupKey }}
-jiraReference={{ jira_reference }}
+jira_reference={{ jiraReference }}
 ''')
 
 description_boundary = '_-- Alertmanager -- [only edit above]_'
