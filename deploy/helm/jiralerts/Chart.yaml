@@ -1,0 +1,15 @@
+---
+name: "jiralerts"
+version: "1.0.0"
+description: "A helm chart that deploys a functional jiralets container to a cluster"
+keywords:
+  - "prometheus"
+  - "jira"
+  - "python"
+home: "https://github.com/fabxc/jiralerts"
+sources:
+  - "https://github.com/fabxc/jiralerts"
+maintainers:
+  - name: "Andrew Howden"
+    email: "andrew.howden[at]sitewards.com"
+engine: gotpl
