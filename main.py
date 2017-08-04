@@ -3,6 +3,7 @@
 import os
 import sys
 import configparser
+import logging
 
 import click
 
@@ -81,6 +82,8 @@ def update_issue(issue, summary, description):
 
 @jira_request_time_create.time()
 def create_issue(project, team, summary, description):
+    logger.info('No issue found. Issue being created in project "' + project + '" of type "' + jira_config.get('issue_type', 'Task') + '" for "' team'".')
+
     return jira.create_issue({
         'project': {'key': project},
         'summary': summary,
@@ -168,24 +171,40 @@ def main(config_file, host, port, server, debug):
     global config
     global jiraconfig
 
-    # Setup the configuration
+    setup_logging()
+
     config = configparser.ConfigParser()
-    config.read(configfile)
+    config.read(config_file)
 
     if not config.has_section('jira'):
         config['jira'] = {}
 
     jira_config = config['jira']
 
+    logger.info('Issue type that will be created: ' + jira_config.get('issue_type', 'Task'))
+
     username = os.environ.get('JIRA_USERNAME')
     password = os.environ.get('JIRA_PASSWORD')
 
     if not username or not password:
-        print("JIRA_USERNAME or JIRA_PASSWORD not set")
+        logger.warn('JIRA_USERNAME or JIRA_PASSWORD not set')
         sys.exit(2)
 
     jira = JIRA(basic_auth=(username, password), server=server, logging=debug)
     app.run(host=host, port=port, debug=debug)
+
+def setup_logging():
+    global logger
+
+    # Set up logging
+    log_format = '%(asctime)-15s %(clientip)s %(user)-8s %(message)s'
+    logger = logging.getLogger('jiralerts')
+    logger.setLevel(logging.DEBUG)
+    sh = logging.StreamHandler(sys.stdout)
+    f = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    sh.setFormatter(f)
+
+    logger.addHandler(sh)
 
 if __name__ == "__main__":
     main()
