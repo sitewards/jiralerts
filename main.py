@@ -82,7 +82,7 @@ def update_issue(issue, summary, description):
 
 @jira_request_time_create.time()
 def create_issue(project, team, summary, description):
-    logger.info('No issue found. Issue being created in project "' + project + '" of type "' + jira_config.get('issue_type', 'Task') + '" for "' team'".')
+    logger.info('No issue found. Issue being created in project "' + project + '" of type "' + jira_config.get('issue_type', 'Task') + '" for "' + team + '".')
 
     return jira.create_issue({
         'project': {'key': project},
