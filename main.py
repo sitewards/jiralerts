@@ -169,7 +169,7 @@ def metrics():
 def main(config_file, host, port, server, debug):
     global jira
     global config
-    global jiraconfig
+    global jira_config
 
     setup_logging()
 
