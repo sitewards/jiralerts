@@ -18,6 +18,11 @@ receivers:
 A typical usage could be a single 'ALERTS' projects where the `<team>`in the URL
 refers to the affected system or the team that should handle the issue.
 
+## Configuration
+
+Jiralerts will look for configuration for certain parametes. Take a look at `jiralerts.ini` for a heavily documented
+example configuration.
+
 ## Thanks
 
 - fabxc is the primary author of all of this work. It has been forked for Sitewards use.
