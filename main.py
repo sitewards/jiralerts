@@ -20,13 +20,17 @@ jira = None
 summary_tmpl = Template(r'{% if commonAnnotations.summary %}{{ commonAnnotations.summary }}{% else %}{% for k, v in groupLabels.items() %}{{ k }}="{{v}}" {% endfor %}{% endif %}')
 
 description_tmpl = Template(r'''
-h2. Common information
+
+Alerts can be "Grouped". Below is both the common and specific information associated with this alert. For more
+information, see the [https://prometheus.io/docs/alerting/configuration/#route|Alertmanager docs]
+
+h2. Labels common across this alert group
 
 {% for k, v in commonAnnotations.items() -%}
 * *{{ k }}*: {{ v }}
 {% endfor %}
 
-h2. Active alerts
+h2. Each alert's labels in this group
 
 {% for a in alerts if a.status == 'firing' -%}
 _Annotations_:
