@@ -50,7 +50,7 @@ description_boundary = '_-- Alertmanager -- [only edit above]_'
 
 # Order for the search query is important for the query performance. It relies
 # on the 'alert_group_key' field in the description that must not be modified.
-search_query = 'project = %s and labels = "alert" and description ~ "alert_group_key=%s"'
+search_query = 'labels = "alert" and description ~ "jira_reference=%s"'
 
 jira_request_time = prometheus.Histogram('jira_request_latency_seconds', 'Latency when querying the JIRA API', ['action'])
 request_time = prometheus.Histogram('request_latency_seconds', 'Latency of incoming requests')
@@ -118,7 +118,7 @@ def file_issue(project, team):
     summary = summary_tmpl.render(data)
 
     # If there's already a ticket for the incident, update it and reopen/close if necessary.
-    result = jira.search_issues(search_query % (project, data['jiraReference']))
+    result = jira.search_issues(search_query % (data['jiraReference']))
     if result:
         issue = result[0]
 
