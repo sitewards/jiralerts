@@ -22,7 +22,7 @@ summary_tmpl = Template(r'{% if commonAnnotations.summary %}{{ commonAnnotations
 description_tmpl = Template(r'''
 
 Alerts can be "Grouped". Below is both the common and specific information associated with this alert. For more
-information, see the [https://prometheus.io/docs/alerting/configuration/#route|Alertmanager docs]
+information, see the [Alertmanager docs|https://prometheus.io/docs/alerting/configuration/#route]
 
 h2. Labels common across this alert group
 
