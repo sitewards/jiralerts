@@ -52,10 +52,6 @@ jira_reference={{ jiraReference }}
 
 description_boundary = '_-- Alertmanager -- [only edit above]_'
 
-# Order for the search query is important for the query performance. It relies
-# on the 'alert_group_key' field in the description that must not be modified.
-search_query = 'labels = "alert" and description ~ "jira_reference=%s"'
-
 jira_request_time = prometheus.Histogram('jira_request_latency_seconds', 'Latency when querying the JIRA API', ['action'])
 request_time = prometheus.Histogram('request_latency_seconds', 'Latency of incoming requests')
 
@@ -64,6 +60,23 @@ jira_request_time_close = jira_request_time.labels({'action': 'close'})
 jira_request_time_reopen = jira_request_time.labels({'action': 'reopen'})
 jira_request_time_update = jira_request_time.labels({'action': 'update'})
 jira_request_time_create = jira_request_time.labels({'action': 'create'})
+jira_request_time_query = jira_request_time.labels({'action': 'query'})
+
+@jira_request_time_query.time()
+def query(reference):
+    search_query = 'description ~ "jira_reference=%s"'
+
+    if jira_config.get('reopen', 'False') == 'False':
+        search_query = search_query + ' and status != "%s"' % (jira_config.get('issue_closed', 'Closed'))
+
+    logger.info('Attempting to query tickets with the following query: ' + search_query % (reference))
+
+    result = jira.search_issues(search_query % (reference))
+
+    if result:
+        return result[0]
+
+    return False
 
 @jira_request_time_transitions.time()
 def transitions(issue):
@@ -114,6 +127,14 @@ def file_issue(project, team):
     """
     logger.info('Update received from Alertmanager. Updating "%s"' % project)
 
+    issue_states = {
+        "alert": jira_config.get('issue_open', 'Open'),
+        "resolved": jira_config.get('issue_closed', 'Closed')
+    }
+
+    # Order for the search query is important for the query performance. It relies
+    # on the 'alert_group_key' field in the description that must not be modified.
+
     data = request.get_json()
     if data['version'] not in ["3", "4"]:
         return "unknown message version %s" % data['version'], 400
@@ -129,31 +150,26 @@ def file_issue(project, team):
     summary = summary_tmpl.render(data)
 
     # If there's already a ticket for the incident, update it and reopen/close if necessary.
-    result = jira.search_issues(search_query % (data['jiraReference']))
-    if result:
-        issue = result[0]
-
+    issue = query(data['jiraReference'])
+    if issue:
         # We have to check the available transitions for the issue. These differ
         # between boards depending on setup.
         trans = {}
+
         for t in transitions(issue):
-            trans[t['name'].lower()] = t['id']
+          trans[t['name'].lower()] = t['id']
 
-        # Try different possible transitions for resolved incidents
-        # in order of preference. Different ones may work for different boards.
         if resolved:
-            for t in ["resolved", "closed", "done", "complete"]:
-                if t in trans:
-                    close(issue, trans[t])
-                    break
-        # For issues that are closed by one of the status definitions below, reopen them.
-        elif issue.fields.status.name.lower() in ["resolved", "closed", "done", "complete"]:
-            for t in trans:
-                if t in ['reopen', 'open']:
-                    reopen(issue, trans[t])
-                    break
+            if issue_states['resolved'] in trans:
+                close(issue, trans[issue_states['resolved']])
+            else:
+                logger.warning('The state "%s" is not a valid transition. Valid ones are "%s"' % (issue_states['resolved'], trans))
+        elif issue.fields.status.name.lower() == jira_config.get('issue_closed', 'Closed'):
+            if issue_states['alert'] in trans:
+                reopen(issue, trans[issue_states['alert']])
+            else:
+                logger.warning('The state "%s" is not a valid transition. Valid ones are "%s"' % (issue_states['alert'], trans))
 
-        # Update the base information regardless of the transition.
         update_issue(issue, summary, description)
 
     # Do not create an issue for resolved incidents that were never filed.
