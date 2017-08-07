@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - The link to the alert manager docs in the generated ticket
+- Fixed "trans undefined". Thanks @mattbostock!
 
 ### Security
 
