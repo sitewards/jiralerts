@@ -67,18 +67,23 @@ jira_request_time_create = jira_request_time.labels({'action': 'create'})
 
 @jira_request_time_transitions.time()
 def transitions(issue):
+    logger.info('Requesting a list of transitions for "%s"' % issue.id)
     return jira.transitions(issue)
 
 @jira_request_time_close.time()
 def close(issue, tid):
+    logger.info('Issue "%s" appears to be resolved. Closing' % issue.id)
     return jira.transition_issue(issue, tid)
 
 @jira_request_time_reopen.time()
 def reopen(issue, tid):
+    logger.info('Issue has "%s" reoccurred. Reopening' % issue.id)
     return jira.transition_issue(issue, tid)
 
 @jira_request_time_update.time()
 def update_issue(issue, summary, description):
+    logger.info('Issue "%s" was found. Updating' % issue.id)
+
     custom_desc = issue.fields.description.rsplit(description_boundary, 1)[0]
     return issue.update(
         summary=summary,
@@ -86,7 +91,7 @@ def update_issue(issue, summary, description):
 
 @jira_request_time_create.time()
 def create_issue(project, team, summary, description):
-    logger.info('No issue found. Issue being created in project "' + project + '" of type "' + jira_config.get('issue_type', 'Task') + '" for "' + team + '".')
+    logger.info('No issue found. Issue being created in project "%s" of type "%s" for "%s".' % (project, jira_config.get('issue_type', 'Task'), team))
 
     return jira.create_issue({
         'project': {'key': project},
@@ -107,6 +112,8 @@ def file_issue(project, team):
     This endpoint accepts a JSON encoded notification according to the version 3 or 4
     of the generic webhook of the Prometheus Alertmanager.
     """
+    logger.info('Update received from Alertmanager. Updating "%s"' % project)
+
     data = request.get_json()
     if data['version'] not in ["3", "4"]:
         return "unknown message version %s" % data['version'], 400
